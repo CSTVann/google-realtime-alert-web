@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { AuthNav } from "@/features/auth/components/auth-nav";
+
 const navigationItems = ["Overview", "Signals", "Sources", "Alerts"];
 
 export function DashboardShell({ children }: { children: ReactNode }) {
@@ -33,13 +35,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
 
-        <a
-          href="#signals"
-          className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:bg-slate-800"
-        >
-          View live signals
-          <span aria-hidden="true">↗</span>
-        </a>
+        <AuthNav />
       </header>
 
       <main className="relative mx-auto w-full max-w-7xl px-4 pb-16 pt-4 sm:px-6 lg:px-8">
