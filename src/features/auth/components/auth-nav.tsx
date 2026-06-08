@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { useAuth } from "@/features/auth/auth-provider";
+import { isAdmin } from "@/lib/auth";
 
 export function AuthNav() {
   const { user, isLoading, logout } = useAuth();
@@ -32,7 +33,21 @@ export function AuthNav() {
 
   return (
     <div className="flex items-center gap-3">
-      <p className="hidden text-sm text-slate-600 sm:block">
+      <Link
+        href="/account"
+        className="hidden rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-950 sm:inline-flex"
+      >
+        Account
+      </Link>
+      {isAdmin(user) ? (
+        <Link
+          href="/admin/users"
+          className="hidden rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-950 sm:inline-flex"
+        >
+          Users
+        </Link>
+      ) : null}
+      <p className="hidden text-sm text-slate-600 md:block">
         {user.first_name} {user.last_name}
       </p>
       <button

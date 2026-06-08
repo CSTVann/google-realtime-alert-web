@@ -1,8 +1,11 @@
+export type UserRole = "user" | "admin";
+
 export type AuthUser = {
   id: string;
   first_name: string;
   last_name: string;
   email: string;
+  role: UserRole;
   created_at: string;
   updated_at: string;
 };
@@ -48,4 +51,8 @@ export function getStoredUser(): AuthUser | null {
   } catch {
     return null;
   }
+}
+
+export function isAdmin(user: AuthUser | null | undefined): boolean {
+  return user?.role === "admin";
 }

@@ -1,5 +1,5 @@
 import { API_V1_URL } from "@/lib/config";
-import type { AuthResponse, AuthUser } from "@/lib/auth";
+import type { AuthResponse, AuthUser, UserRole } from "@/lib/auth";
 import { getAccessToken, saveAuthSession } from "@/lib/auth";
 
 type ApiError = {
@@ -83,6 +83,38 @@ export async function fetchCurrentUser(): Promise<AuthUser> {
   }
 
   const response = await apiFetch("/auth/me");
+
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+
+  return response.json() as Promise<AuthUser>;
+}
+
+export async function listUsers(): Promise<AuthUser[]> {
+  const response = await apiFetch("/auth/users");
+
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+
+  return response.json() as Promise<AuthUser[]>;
+}
+
+export async function updateUser(
+  userId: string,
+  payload: {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    role?: UserRole;
+    password?: string;
+  },
+): Promise<AuthUser> {
+  const response = await apiFetch(`/auth/users/${userId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
 
   if (!response.ok) {
     throw new Error(await parseError(response));
