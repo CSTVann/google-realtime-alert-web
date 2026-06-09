@@ -10,9 +10,19 @@ function formatCredits(value: number) {
   return new Intl.NumberFormat("en-US").format(value);
 }
 
+function formatPrice(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
 export function PricingPanel() {
   const { user } = useAuth();
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [isLoadingPlans, setIsLoadingPlans] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -20,7 +30,8 @@ export function PricingPanel() {
   useEffect(() => {
     void fetchPlans()
       .then(setPlans)
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load plans"));
+      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load plans"))
+      .finally(() => setIsLoadingPlans(false));
   }, []);
 
   async function handleCheckout(planId: string) {
@@ -73,7 +84,24 @@ export function PricingPanel() {
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {plans.map((plan) => (
+        {isLoadingPlans
+          ? Array.from({ length: 3 }, (_, index) => (
+              <article key={index} className="panel rounded-[2rem] p-6">
+                <div className="mb-4 h-7 w-24 animate-pulse rounded-full bg-[var(--border)]" />
+                <div className="h-8 w-32 animate-pulse rounded-full bg-[var(--border)]" />
+                <div className="mt-2 h-4 w-full animate-pulse rounded-full bg-[var(--border)]" />
+                <div className="mt-6 h-10 w-28 animate-pulse rounded-full bg-[var(--border)]" />
+                <div className="mt-6 space-y-3">
+                  {Array.from({ length: 4 }, (_, line) => (
+                    <div key={line} className="h-4 w-3/4 animate-pulse rounded-full bg-[var(--border)]" />
+                  ))}
+                </div>
+                <div className="mt-8 h-11 w-full animate-pulse rounded-2xl bg-[var(--border)]" />
+              </article>
+            ))
+          : null}
+        {!isLoadingPlans
+          ? plans.map((plan) => (
           <article
             key={plan.id}
             className={`panel rounded-[2rem] p-6 ${
@@ -92,7 +120,7 @@ export function PricingPanel() {
             <p className="mt-2 text-sm text-muted">{plan.description}</p>
 
             <div className="mt-6 flex items-end gap-2">
-              <span className="text-4xl font-semibold">${plan.price_usd}</span>
+              <span className="text-4xl font-semibold">{formatPrice(plan.price_usd)}</span>
               <span className="pb-1 text-sm text-muted">/ pack</span>
             </div>
 
@@ -116,7 +144,8 @@ export function PricingPanel() {
               {loadingPlan === plan.id ? "Activating..." : user ? "Buy plan (stub)" : "Register to buy"}
             </button>
           </article>
-        ))}
+            ))
+          : null}
       </div>
     </div>
   );
