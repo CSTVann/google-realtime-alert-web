@@ -32,6 +32,7 @@ type AuthContextValue = {
     password: string;
   }) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -94,6 +95,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    const freshUser = await fetchCurrentUser();
+    setUser(freshUser);
+    const token = getAccessToken();
+    if (token) {
+      saveAuthSession({ access_token: token, token_type: "bearer", user: freshUser });
+    }
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
@@ -102,8 +112,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       register,
       logout,
+      refreshUser,
     }),
-    [user, token, isLoading, login, register, logout],
+    [user, token, isLoading, login, register, logout, refreshUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

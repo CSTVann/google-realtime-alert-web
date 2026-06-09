@@ -6,6 +6,13 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/auth-provider";
 import { checkoutPlan, fetchPlans, type Plan } from "@/lib/api";
 
+function formatExpiryDays(days: number) {
+  if (days === 7) return "7 days";
+  if (days === 30) return "1 month";
+  if (days === 90) return "3 months";
+  return `${days} days`;
+}
+
 function formatCredits(value: number) {
   return new Intl.NumberFormat("en-US").format(value);
 }
@@ -20,7 +27,7 @@ function formatPrice(value: number) {
 }
 
 export function PricingPanel() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [isLoadingPlans, setIsLoadingPlans] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +53,7 @@ export function PricingPanel() {
 
     try {
       const result = await checkoutPlan(planId);
+      await refreshUser();
       setSuccess(
         `${result.message} +${formatCredits(result.credits_added)} credits (balance: ${formatCredits(result.credits_balance)}).`,
       );
@@ -131,6 +139,7 @@ export function PricingPanel() {
                   ? "Unlimited projects"
                   : `Up to ${plan.max_projects} projects`}
               </li>
+              <li>Credits valid for {formatExpiryDays(plan.credit_expiry_days)}</li>
               <li>1 credit = 1 keyword track run</li>
               <li>Telegram bot / group delivery</li>
             </ul>

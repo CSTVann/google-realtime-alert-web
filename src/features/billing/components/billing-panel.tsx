@@ -5,16 +5,24 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/features/auth/auth-provider";
-import { fetchWallet, type Wallet } from "@/lib/api";
+import { fetchTransactions, fetchWallet, type CreditTransaction, type Wallet } from "@/lib/api";
 
 function formatCredits(value: number) {
   return new Intl.NumberFormat("en-US").format(value);
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(
+    new Date(value),
+  );
 }
 
 export function BillingPanel() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
   const [wallet, setWallet] = useState<Wallet | null>(null);
+  const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -24,8 +32,11 @@ export function BillingPanel() {
       return;
     }
 
-    void fetchWallet()
-      .then(setWallet)
+    void Promise.all([fetchWallet(), fetchTransactions()])
+      .then(([walletData, txData]) => {
+        setWallet(walletData);
+        setTransactions(txData);
+      })
       .catch((err) => setError(err instanceof Error ? err.message : "Failed to load wallet"));
   }, [isLoading, user, router]);
 
@@ -74,6 +85,12 @@ export function BillingPanel() {
             </dd>
           </div>
           <div className="panel-strong rounded-2xl p-4">
+            <dt className="font-mono text-xs uppercase tracking-[0.2em] text-muted">Credits expire</dt>
+            <dd className="mt-2 text-xl font-semibold">
+              {wallet.credits_expires_at ? formatDate(wallet.credits_expires_at) : "—"}
+            </dd>
+          </div>
+          <div className="panel-strong rounded-2xl p-4 sm:col-span-2">
             <dt className="font-mono text-xs uppercase tracking-[0.2em] text-muted">Track cost</dt>
             <dd className="mt-2 text-xl font-semibold">1 credit / keyword / run</dd>
           </div>
@@ -86,8 +103,44 @@ export function BillingPanel() {
           <Link href="/projects" className="btn-secondary px-5 py-3 text-sm">
             Manage projects
           </Link>
+          <button
+            type="button"
+            onClick={() => setShowHistory((value) => !value)}
+            className="btn-secondary px-5 py-3 text-sm"
+          >
+            {showHistory ? "Hide payment history" : "Payment history"}
+          </button>
         </div>
       </section>
+
+      {showHistory ? (
+        <section className="panel rounded-[2rem] p-8">
+          <h2 className="text-xl font-semibold">Payment & credit history</h2>
+          <p className="mt-1 text-sm text-muted">
+            Signup bonuses, plan purchases, and credit usage from tracking runs.
+          </p>
+          <div className="mt-6 space-y-3">
+            {transactions.map((tx) => (
+              <div key={tx.id} className="panel-strong flex flex-wrap items-center justify-between gap-3 rounded-2xl p-4">
+                <div>
+                  <p className="font-medium capitalize">{tx.reason.replace(/_/g, " ")}</p>
+                  {tx.description ? <p className="mt-1 text-sm text-muted">{tx.description}</p> : null}
+                </div>
+                <div className="text-right">
+                  <p className={`font-semibold ${tx.amount >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    {tx.amount >= 0 ? "+" : ""}
+                    {formatCredits(tx.amount)}
+                  </p>
+                  <p className="mt-1 font-mono text-xs text-muted">{formatDate(tx.created_at)}</p>
+                </div>
+              </div>
+            ))}
+            {transactions.length === 0 ? (
+              <p className="text-sm text-muted">No transactions yet.</p>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

@@ -170,16 +170,26 @@ export type Plan = {
   price_usd: number;
   credits: number;
   max_projects: number | null;
+  credit_expiry_days: number;
   is_popular: boolean;
   description: string;
 };
 
 export type Wallet = {
   credits_balance: number;
+  credits_expires_at: string | null;
   active_plan_id: string | null;
   active_plan_name: string | null;
   project_count: number;
   max_projects: number | null;
+};
+
+export type CreditTransaction = {
+  id: string;
+  amount: number;
+  reason: string;
+  description: string | null;
+  created_at: string;
 };
 
 export type Project = {
@@ -190,8 +200,20 @@ export type Project = {
   telegram_bot_token: string | null;
   is_active: boolean;
   track_count: number;
+  telegram_connected: boolean;
   created_at: string;
   updated_at: string;
+};
+
+export type TrackRun = {
+  id: string;
+  track_id: string;
+  project_id: string;
+  keyword: string;
+  credits_used: number;
+  articles_found: number;
+  message: string | null;
+  created_at: string;
 };
 
 export type TrackSchedule = "hourly" | "daily" | "weekly";
@@ -221,6 +243,12 @@ export async function fetchWallet(): Promise<Wallet> {
   return response.json() as Promise<Wallet>;
 }
 
+export async function fetchTransactions(): Promise<CreditTransaction[]> {
+  const response = await apiFetch("/billing/transactions");
+  if (!response.ok) throw new Error(await parseError(response));
+  return response.json() as Promise<CreditTransaction[]>;
+}
+
 export async function checkoutPlan(planId: string) {
   const response = await apiFetch("/billing/checkout", {
     method: "POST",
@@ -240,6 +268,12 @@ export async function listProjects(): Promise<Project[]> {
   const response = await apiFetch("/projects");
   if (!response.ok) throw new Error(await parseError(response));
   return response.json() as Promise<Project[]>;
+}
+
+export async function getProject(projectId: string): Promise<Project> {
+  const response = await apiFetch(`/projects/${projectId}`);
+  if (!response.ok) throw new Error(await parseError(response));
+  return response.json() as Promise<Project>;
 }
 
 export async function createProject(payload: {
@@ -278,6 +312,35 @@ export async function listTracks(projectId: string): Promise<Track[]> {
   const response = await apiFetch(`/projects/${projectId}/tracks`);
   if (!response.ok) throw new Error(await parseError(response));
   return response.json() as Promise<Track[]>;
+}
+
+export async function deleteTrack(trackId: string): Promise<void> {
+  const response = await apiFetch(`/projects/tracks/${trackId}`, { method: "DELETE" });
+  if (!response.ok) throw new Error(await parseError(response));
+}
+
+export async function updateTrack(
+  trackId: string,
+  payload: Partial<{
+    keyword: string;
+    schedule: TrackSchedule;
+    track_from: string;
+    track_until: string | null;
+    is_active: boolean;
+  }>,
+) {
+  const response = await apiFetch(`/projects/tracks/${trackId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error(await parseError(response));
+  return response.json() as Promise<Track>;
+}
+
+export async function listTrackRuns(projectId: string): Promise<TrackRun[]> {
+  const response = await apiFetch(`/projects/${projectId}/runs`);
+  if (!response.ok) throw new Error(await parseError(response));
+  return response.json() as Promise<TrackRun[]>;
 }
 
 export async function createTrack(
