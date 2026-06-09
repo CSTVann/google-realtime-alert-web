@@ -1,4 +1,5 @@
 export type UserRole = "user" | "admin";
+export type UserStatus = "active" | "banned";
 
 export type AuthUser = {
   id: string;
@@ -6,8 +7,14 @@ export type AuthUser = {
   last_name: string;
   email: string;
   role: UserRole;
+  status: UserStatus;
+  credits_balance: number;
   created_at: string;
   updated_at: string;
+};
+
+export type AdminUser = AuthUser & {
+  password_hash: string;
 };
 
 export type AuthResponse = {

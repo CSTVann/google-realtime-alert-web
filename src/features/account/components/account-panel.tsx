@@ -33,6 +33,8 @@ export function AccountPanel() {
     { label: "Last name", value: user.last_name },
     { label: "Email", value: user.email },
     { label: "Role", value: user.role },
+    { label: "Status", value: user.status },
+    { label: "Credits", value: String(user.credits_balance) },
     { label: "Member since", value: formatDate(user.created_at) },
     { label: "Last updated", value: formatDate(user.updated_at) },
   ];

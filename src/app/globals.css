@@ -1,8 +1,31 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f3efe6;
-  --foreground: #0f172a;
+  --background: #f4f7f2;
+  --foreground: #0b1220;
+  --surface: rgba(255, 255, 255, 0.82);
+  --surface-strong: #ffffff;
+  --border: rgba(15, 23, 42, 0.12);
+  --muted: #5b6472;
+  --accent: #0f172a;
+  --accent-fg: #f8fafc;
+  --glow: rgba(34, 197, 94, 0.18);
+  --danger: #dc2626;
+  --grid: rgba(15, 23, 42, 0.04);
+}
+
+.dark {
+  --background: #05080f;
+  --foreground: #d7fbe8;
+  --surface: rgba(8, 16, 28, 0.82);
+  --surface-strong: #0b1220;
+  --border: rgba(52, 211, 153, 0.18);
+  --muted: #7dd3a8;
+  --accent: #22c55e;
+  --accent-fg: #04120a;
+  --glow: rgba(34, 197, 94, 0.22);
+  --danger: #f87171;
+  --grid: rgba(34, 197, 94, 0.06);
 }
 
 @theme inline {
@@ -29,8 +52,8 @@ body {
 }
 
 ::selection {
-  background: #111827;
-  color: #f9fafb;
+  background: var(--accent);
+  color: var(--accent-fg);
 }
 
 body::before {
@@ -39,8 +62,61 @@ body::before {
   inset: 0;
   pointer-events: none;
   background-image:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.85), transparent 34%),
-    radial-gradient(circle at 80% 20%, rgba(249, 115, 22, 0.08), transparent 28%),
-    radial-gradient(circle at 50% 100%, rgba(15, 23, 42, 0.08), transparent 30%);
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+    radial-gradient(circle at top left, var(--glow), transparent 35%);
+  background-size: 28px 28px, 28px 28px, auto;
   opacity: 0.9;
+}
+
+.panel {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+}
+
+.panel-strong {
+  border: 1px solid var(--border);
+  background: var(--surface-strong);
+}
+
+.text-muted {
+  color: var(--muted);
+}
+
+.btn-primary {
+  border-radius: 9999px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-weight: 500;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  opacity: 0.92;
+}
+
+.btn-secondary {
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+.input-field {
+  width: 100%;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: var(--surface-strong);
+  color: var(--foreground);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.input-field:focus {
+  border-color: var(--accent);
 }

@@ -1,5 +1,5 @@
 import { API_V1_URL } from "@/lib/config";
-import type { AuthResponse, AuthUser, UserRole } from "@/lib/auth";
+import type { AdminUser, AuthResponse, AuthUser, UserRole, UserStatus } from "@/lib/auth";
 import { getAccessToken, saveAuthSession } from "@/lib/auth";
 
 type ApiError = {
@@ -91,14 +91,44 @@ export async function fetchCurrentUser(): Promise<AuthUser> {
   return response.json() as Promise<AuthUser>;
 }
 
-export async function listUsers(): Promise<AuthUser[]> {
+export async function listUsers(): Promise<AdminUser[]> {
   const response = await apiFetch("/auth/users");
 
   if (!response.ok) {
     throw new Error(await parseError(response));
   }
 
-  return response.json() as Promise<AuthUser[]>;
+  return response.json() as Promise<AdminUser[]>;
+}
+
+export async function getUser(userId: string): Promise<AdminUser> {
+  const response = await apiFetch(`/auth/users/${userId}`);
+
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+
+  return response.json() as Promise<AdminUser>;
+}
+
+export async function createUser(payload: {
+  first_name: string;
+  last_name: string;
+  email: string;
+  password: string;
+  role?: UserRole;
+  status?: UserStatus;
+}): Promise<AdminUser> {
+  const response = await apiFetch("/auth/users", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+
+  return response.json() as Promise<AdminUser>;
 }
 
 export async function updateUser(
@@ -108,9 +138,10 @@ export async function updateUser(
     last_name?: string;
     email?: string;
     role?: UserRole;
+    status?: UserStatus;
     password?: string;
   },
-): Promise<AuthUser> {
+): Promise<AdminUser> {
   const response = await apiFetch(`/auth/users/${userId}`, {
     method: "PATCH",
     body: JSON.stringify(payload),
@@ -120,5 +151,163 @@ export async function updateUser(
     throw new Error(await parseError(response));
   }
 
-  return response.json() as Promise<AuthUser>;
+  return response.json() as Promise<AdminUser>;
+}
+
+export async function deleteUser(userId: string): Promise<void> {
+  const response = await apiFetch(`/auth/users/${userId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+}
+
+export type Plan = {
+  id: string;
+  name: string;
+  price_usd: number;
+  credits: number;
+  max_projects: number | null;
+  is_popular: boolean;
+  description: string;
+};
+
+export type Wallet = {
+  credits_balance: number;
+  active_plan_id: string | null;
+  active_plan_name: string | null;
+  project_count: number;
+  max_projects: number | null;
+};
+
+export type Project = {
+  id: string;
+  name: string;
+  description: string | null;
+  telegram_chat_id: string | null;
+  telegram_bot_token: string | null;
+  is_active: boolean;
+  track_count: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type TrackSchedule = "hourly" | "daily" | "weekly";
+
+export type Track = {
+  id: string;
+  project_id: string;
+  keyword: string;
+  schedule: TrackSchedule;
+  track_from: string;
+  track_until: string | null;
+  is_active: boolean;
+  last_tracked_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export async function fetchPlans(): Promise<Plan[]> {
+  const response = await apiFetch("/billing/plans");
+  if (!response.ok) throw new Error(await parseError(response));
+  return response.json() as Promise<Plan[]>;
+}
+
+export async function fetchWallet(): Promise<Wallet> {
+  const response = await apiFetch("/billing/wallet");
+  if (!response.ok) throw new Error(await parseError(response));
+  return response.json() as Promise<Wallet>;
+}
+
+export async function checkoutPlan(planId: string) {
+  const response = await apiFetch("/billing/checkout", {
+    method: "POST",
+    body: JSON.stringify({ plan_id: planId }),
+  });
+  if (!response.ok) throw new Error(await parseError(response));
+  return response.json() as Promise<{
+    status: string;
+    message: string;
+    plan_id: string;
+    credits_added: number;
+    credits_balance: number;
+  }>;
+}
+
+export async function listProjects(): Promise<Project[]> {
+  const response = await apiFetch("/projects");
+  if (!response.ok) throw new Error(await parseError(response));
+  return response.json() as Promise<Project[]>;
+}
+
+export async function createProject(payload: {
+  name: string;
+  description?: string;
+  telegram_chat_id?: string;
+  telegram_bot_token?: string;
+}) {
+  const response = await apiFetch("/projects", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error(await parseError(response));
+  return response.json() as Promise<Project>;
+}
+
+export async function updateProject(
+  projectId: string,
+  payload: Partial<{
+    name: string;
+    description: string | null;
+    telegram_chat_id: string | null;
+    telegram_bot_token: string | null;
+    is_active: boolean;
+  }>,
+) {
+  const response = await apiFetch(`/projects/${projectId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error(await parseError(response));
+  return response.json() as Promise<Project>;
+}
+
+export async function listTracks(projectId: string): Promise<Track[]> {
+  const response = await apiFetch(`/projects/${projectId}/tracks`);
+  if (!response.ok) throw new Error(await parseError(response));
+  return response.json() as Promise<Track[]>;
+}
+
+export async function createTrack(
+  projectId: string,
+  payload: {
+    keyword: string;
+    schedule: TrackSchedule;
+    track_from: string;
+    track_until?: string | null;
+  },
+) {
+  const response = await apiFetch(`/projects/${projectId}/tracks`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error(await parseError(response));
+  return response.json() as Promise<Track>;
+}
+
+export async function runTrack(trackId: string) {
+  const response = await apiFetch(`/projects/tracks/${trackId}/run`, {
+    method: "POST",
+  });
+  if (!response.ok) throw new Error(await parseError(response));
+  return response.json() as Promise<{
+    track_id: string;
+    keyword: string;
+    credits_used: number;
+    articles_found: number;
+    telegram_sent: boolean;
+    message: string;
+  }>;
 }

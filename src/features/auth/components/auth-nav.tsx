@@ -15,16 +15,10 @@ export function AuthNav() {
   if (!user) {
     return (
       <div className="flex items-center gap-2">
-        <Link
-          href="/login"
-          className="rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-950"
-        >
+        <Link href="/login" className="btn-secondary px-4 py-2 text-sm">
           Sign in
         </Link>
-        <Link
-          href="/register"
-          className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:bg-slate-800"
-        >
+        <Link href="/register" className="btn-primary px-4 py-2 text-sm">
           Register
         </Link>
       </div>
@@ -33,21 +27,24 @@ export function AuthNav() {
 
   return (
     <div className="flex items-center gap-3">
+      <p className="hidden font-mono text-xs text-muted lg:block">
+        {user.credits_balance} credits
+      </p>
       <Link
         href="/account"
-        className="hidden rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-950 sm:inline-flex"
+        className="hidden rounded-full px-4 py-2 text-sm font-medium text-muted transition hover:bg-[var(--accent)] hover:text-[var(--accent-fg)] sm:inline-flex"
       >
         Account
       </Link>
       {isAdmin(user) ? (
         <Link
           href="/admin/users"
-          className="hidden rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-950 sm:inline-flex"
+          className="hidden rounded-full px-4 py-2 text-sm font-medium text-muted transition hover:bg-[var(--accent)] hover:text-[var(--accent-fg)] sm:inline-flex"
         >
           Users
         </Link>
       ) : null}
-      <p className="hidden text-sm text-slate-600 md:block">
+      <p className="hidden text-sm text-muted md:block">
         {user.first_name} {user.last_name}
       </p>
       <button
@@ -56,7 +53,7 @@ export function AuthNav() {
           logout();
           window.location.href = "/login";
         }}
-        className="rounded-full border border-white/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-950 hover:text-white"
+        className="btn-secondary px-4 py-2 text-sm"
       >
         Log out
       </button>
