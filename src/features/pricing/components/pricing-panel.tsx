@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { useAuth } from "@/features/auth/auth-provider";
+import { PageHeader } from "@/features/ui/page-header";
 import { checkoutPlan, fetchPlans, type Plan } from "@/lib/api";
 
 function formatExpiryDays(days: number) {
@@ -65,94 +65,69 @@ export function PricingPanel() {
   }
 
   return (
-    <div className="space-y-8">
-      <section className="panel rounded-[2rem] p-8">
-        <p className="font-mono text-xs font-semibold uppercase tracking-[0.35em] text-muted">
-          Pricing
-        </p>
-        <h1 className="mt-2 text-4xl font-semibold tracking-tight">
-          Track the internet on your schedule
-        </h1>
-        <p className="mt-3 max-w-3xl text-sm text-muted">
-          No agency. No custom bot. Register, buy a plan, create projects, link Telegram, and
-          track keywords across Google results. Each track uses 1 credit per keyword run. New
-          accounts get 100 free credits.
-        </p>
+    <div className="page-stack">
+      <section className="panel p-6 sm:p-8">
+        <PageHeader
+          label="Pricing"
+          title="Simple credit-based plans"
+          description="Each keyword track uses 1 credit. New accounts receive 100 free credits valid for 7 days."
+        />
       </section>
 
-      {error ? (
-        <p className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-          {error}
-        </p>
-      ) : null}
-      {success ? (
-        <p className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
-          {success}
-        </p>
-      ) : null}
+      {error ? <p className="alert alert-error">{error}</p> : null}
+      {success ? <p className="alert alert-success">{success}</p> : null}
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         {isLoadingPlans
           ? Array.from({ length: 3 }, (_, index) => (
-              <article key={index} className="panel rounded-[2rem] p-6">
-                <div className="mb-4 h-7 w-24 animate-pulse rounded-full bg-[var(--border)]" />
-                <div className="h-8 w-32 animate-pulse rounded-full bg-[var(--border)]" />
-                <div className="mt-2 h-4 w-full animate-pulse rounded-full bg-[var(--border)]" />
-                <div className="mt-6 h-10 w-28 animate-pulse rounded-full bg-[var(--border)]" />
-                <div className="mt-6 space-y-3">
-                  {Array.from({ length: 4 }, (_, line) => (
-                    <div key={line} className="h-4 w-3/4 animate-pulse rounded-full bg-[var(--border)]" />
-                  ))}
-                </div>
-                <div className="mt-8 h-11 w-full animate-pulse rounded-2xl bg-[var(--border)]" />
+              <article key={index} className="panel p-6">
+                <div className="skeleton mb-4 h-6 w-24" />
+                <div className="skeleton h-8 w-32" />
+                <div className="skeleton mt-6 h-10 w-full" />
               </article>
             ))
           : null}
         {!isLoadingPlans
           ? plans.map((plan) => (
-          <article
-            key={plan.id}
-            className={`panel rounded-[2rem] p-6 ${
-              plan.is_popular ? "ring-2 ring-[var(--accent)]" : ""
-            }`}
-          >
-            {plan.is_popular ? (
-              <span className="mb-4 inline-flex rounded-full bg-[var(--accent)] px-3 py-1 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent-fg)]">
-                Most popular
-              </span>
-            ) : (
-              <span className="mb-4 inline-flex h-7" />
-            )}
+              <article
+                key={plan.id}
+                className={`panel flex flex-col p-6 ${plan.is_popular ? "ring-1 ring-[var(--border-strong)]" : ""}`}
+              >
+                {plan.is_popular ? (
+                  <span className="badge badge-success mb-4 w-fit">Most popular</span>
+                ) : (
+                  <span className="mb-4 h-6" />
+                )}
 
-            <h2 className="text-2xl font-semibold">{plan.name}</h2>
-            <p className="mt-2 text-sm text-muted">{plan.description}</p>
+                <h2 className="text-xl font-semibold">{plan.name}</h2>
+                <p className="mt-2 text-sm text-muted">{plan.description}</p>
 
-            <div className="mt-6 flex items-end gap-2">
-              <span className="text-4xl font-semibold">{formatPrice(plan.price_usd)}</span>
-              <span className="pb-1 text-sm text-muted">/ pack</span>
-            </div>
+                <div className="mt-6 flex items-end gap-2">
+                  <span className="text-3xl font-semibold">{formatPrice(plan.price_usd)}</span>
+                  <span className="pb-1 text-sm text-muted">/ pack</span>
+                </div>
 
-            <ul className="mt-6 space-y-3 text-sm">
-              <li>{formatCredits(plan.credits)} credits</li>
-              <li>
-                {plan.max_projects === null
-                  ? "Unlimited projects"
-                  : `Up to ${plan.max_projects} projects`}
-              </li>
-              <li>Credits valid for {formatExpiryDays(plan.credit_expiry_days)}</li>
-              <li>1 credit = 1 keyword track run</li>
-              <li>Telegram bot / group delivery</li>
-            </ul>
+                <ul className="mt-6 flex-1 space-y-2.5 text-sm text-muted">
+                  <li>{formatCredits(plan.credits)} credits</li>
+                  <li>
+                    {plan.max_projects === null
+                      ? "Unlimited projects"
+                      : `Up to ${plan.max_projects} projects`}
+                  </li>
+                  <li>Credits valid for {formatExpiryDays(plan.credit_expiry_days)}</li>
+                  <li>1 credit = 1 keyword track run</li>
+                  <li>Telegram delivery included</li>
+                </ul>
 
-            <button
-              type="button"
-              disabled={loadingPlan === plan.id}
-              onClick={() => void handleCheckout(plan.id)}
-              className="btn-primary mt-8 w-full px-4 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loadingPlan === plan.id ? "Activating..." : user ? "Buy plan (stub)" : "Register to buy"}
-            </button>
-          </article>
+                <button
+                  type="button"
+                  disabled={loadingPlan === plan.id}
+                  onClick={() => void handleCheckout(plan.id)}
+                  className="btn-primary mt-8 w-full px-4 py-2.5"
+                >
+                  {loadingPlan === plan.id ? "Activating..." : user ? "Buy plan (stub)" : "Register to buy"}
+                </button>
+              </article>
             ))
           : null}
       </div>

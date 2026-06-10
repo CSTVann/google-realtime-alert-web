@@ -41,20 +41,20 @@ export function RegisterForm() {
   return (
     <AuthShell
       title="Create your account"
-      subtitle="Register with your name, Gmail, and password."
+      subtitle="Register and get 100 free credits to try tracking."
       footer={
         <>
           Already have an account?{" "}
-          <Link href="/login" className="font-medium text-slate-950 underline-offset-4 hover:underline">
+          <Link href="/login" className="font-medium text-[var(--foreground)] underline-offset-4 hover:underline">
             Sign in
           </Link>
         </>
       }
     >
-      <form className="space-y-5" onSubmit={handleSubmit}>
+      <form className="space-y-4" onSubmit={handleSubmit}>
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-slate-700">First name</span>
+          <label className="block space-y-1.5">
+            <span className="text-sm font-medium">First name</span>
             <input
               type="text"
               name="first_name"
@@ -62,12 +62,12 @@ export function RegisterForm() {
               autoComplete="given-name"
               value={firstName}
               onChange={(event) => setFirstName(event.target.value)}
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none transition focus:border-slate-950"
+              className="input-field"
             />
           </label>
 
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-slate-700">Last name</span>
+          <label className="block space-y-1.5">
+            <span className="text-sm font-medium">Last name</span>
             <input
               type="text"
               name="last_name"
@@ -75,13 +75,13 @@ export function RegisterForm() {
               autoComplete="family-name"
               value={lastName}
               onChange={(event) => setLastName(event.target.value)}
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none transition focus:border-slate-950"
+              className="input-field"
             />
           </label>
         </div>
 
-        <label className="block space-y-2">
-          <span className="text-sm font-medium text-slate-700">Gmail</span>
+        <label className="block space-y-1.5">
+          <span className="text-sm font-medium">Email</span>
           <input
             type="email"
             name="email"
@@ -90,12 +90,12 @@ export function RegisterForm() {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             placeholder="you@gmail.com"
-            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none transition focus:border-slate-950"
+            className="input-field"
           />
         </label>
 
-        <label className="block space-y-2">
-          <span className="text-sm font-medium text-slate-700">Password</span>
+        <label className="block space-y-1.5">
+          <span className="text-sm font-medium">Password</span>
           <input
             type="password"
             name="password"
@@ -105,21 +105,13 @@ export function RegisterForm() {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="At least 8 characters"
-            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none transition focus:border-slate-950"
+            className="input-field"
           />
         </label>
 
-        {error ? (
-          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
-          </p>
-        ) : null}
+        {error ? <p className="alert alert-error">{error}</p> : null}
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full rounded-full bg-slate-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-        >
+        <button type="submit" disabled={isSubmitting} className="btn-primary w-full px-4 py-2.5">
           {isSubmitting ? "Creating account..." : "Create account"}
         </button>
       </form>

@@ -171,19 +171,19 @@ export function ProjectControllerPanel({ project }: { project: Project }) {
   }
 
   return (
-    <div className="space-y-6">
-      <section className="panel rounded-[2rem] p-8">
+    <div className="page-stack">
+      <section className="panel p-6 sm:p-8">
         <Link href="/projects" className="text-sm text-muted hover:text-[var(--foreground)]">
           ← Back to projects
         </Link>
-        <h1 className="mt-4 text-3xl font-semibold">{project.name}</h1>
-        <p className="mt-2 text-sm text-muted">{project.description}</p>
-        <div className="mt-4 flex flex-wrap gap-3 font-mono text-xs text-muted">
-          <span>{project.telegram_connected ? "Telegram connected" : "Telegram not verified"}</span>
-          <span>•</span>
-          <span>{tracks.length} keywords</span>
-          <span>•</span>
-          <span>1 credit per keyword per run</span>
+        <h1 className="mt-4 page-title">{project.name}</h1>
+        {project.description ? <p className="mt-2 page-description">{project.description}</p> : null}
+        <div className="mt-4 flex flex-wrap gap-2">
+          <span className={`badge ${project.telegram_connected ? "badge-success" : ""}`}>
+            {project.telegram_connected ? "Telegram connected" : "Telegram not verified"}
+          </span>
+          <span className="badge">{tracks.length} keywords</span>
+          <span className="badge">1 credit / run</span>
         </div>
       </section>
 
@@ -191,46 +191,38 @@ export function ProjectControllerPanel({ project }: { project: Project }) {
         <button
           type="button"
           onClick={() => setTab("keywords")}
-          className={tab === "keywords" ? "btn-primary px-4 py-2 text-sm" : "btn-secondary px-4 py-2 text-sm"}
+          className={tab === "keywords" ? "btn-primary px-4 py-2" : "btn-secondary px-4 py-2"}
         >
           Keywords
         </button>
         <button
           type="button"
           onClick={() => setTab("history")}
-          className={tab === "history" ? "btn-primary px-4 py-2 text-sm" : "btn-secondary px-4 py-2 text-sm"}
+          className={tab === "history" ? "btn-primary px-4 py-2" : "btn-secondary px-4 py-2"}
         >
           Track history
         </button>
       </div>
 
-      {error ? (
-        <p className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-          {error}
-        </p>
-      ) : null}
-      {message ? (
-        <p className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
-          {message}
-        </p>
-      ) : null}
+      {error ? <p className="alert alert-error">{error}</p> : null}
+      {message ? <p className="alert alert-success">{message}</p> : null}
 
       {tab === "keywords" ? (
         <>
-          <section className="panel rounded-[2rem] p-6">
+          <section className="panel p-6">
             <h2 className="text-lg font-semibold">{editingTrack ? "Edit keyword" : "Add keyword"}</h2>
             <p className="mt-1 text-sm text-muted">
-              Set a date window per keyword — e.g. track from Jan 1 until present, or until a specific end date.
+              Set a date window per keyword — from a start date until present or a specific end date.
             </p>
             <form
               className="mt-4 grid gap-4 md:grid-cols-2"
               onSubmit={editingTrack ? handleUpdateTrack : handleAddTrack}
             >
-              <label className="block space-y-2 md:col-span-2">
+              <label className="block space-y-1.5 md:col-span-2">
                 <span className="text-sm font-medium">Keyword</span>
                 <input required value={keyword} onChange={(e) => setKeyword(e.target.value)} className="input-field" />
               </label>
-              <label className="block space-y-2">
+              <label className="block space-y-1.5">
                 <span className="text-sm font-medium">Schedule</span>
                 <select value={schedule} onChange={(e) => setSchedule(e.target.value as TrackSchedule)} className="input-field">
                   <option value="hourly">Hourly</option>
@@ -238,20 +230,20 @@ export function ProjectControllerPanel({ project }: { project: Project }) {
                   <option value="weekly">Weekly</option>
                 </select>
               </label>
-              <label className="block space-y-2">
+              <label className="block space-y-1.5">
                 <span className="text-sm font-medium">Track from</span>
                 <input type="datetime-local" required value={trackFrom} onChange={(e) => setTrackFrom(e.target.value)} className="input-field" />
               </label>
-              <label className="block space-y-2 md:col-span-2">
+              <label className="block space-y-1.5 md:col-span-2">
                 <span className="text-sm font-medium">Track until (optional)</span>
                 <input type="datetime-local" value={trackUntil} onChange={(e) => setTrackUntil(e.target.value)} className="input-field" />
               </label>
               <div className="flex flex-wrap gap-3 md:col-span-2">
-                <button type="submit" disabled={isBusy} className="btn-primary px-5 py-3 text-sm disabled:opacity-60">
+                <button type="submit" disabled={isBusy} className="btn-primary px-4 py-2.5">
                   {editingTrack ? "Save changes" : "Add keyword"}
                 </button>
                 {editingTrack ? (
-                  <button type="button" onClick={cancelEdit} className="btn-secondary px-5 py-3 text-sm">
+                  <button type="button" onClick={cancelEdit} className="btn-secondary px-4 py-2.5">
                     Cancel
                   </button>
                 ) : null}
@@ -259,44 +251,44 @@ export function ProjectControllerPanel({ project }: { project: Project }) {
             </form>
           </section>
 
-          <section className="panel rounded-[2rem] p-6">
+          <section className="panel p-6">
             <h2 className="text-lg font-semibold">Active keywords</h2>
-            <div className="mt-4 overflow-x-auto rounded-2xl border border-[var(--border)]">
-              <table className="min-w-full text-left text-sm">
-                <thead className="bg-[var(--surface-strong)] font-mono text-xs uppercase tracking-[0.2em] text-muted">
+            <div className="data-table-wrap mt-4">
+              <table className="data-table">
+                <thead>
                   <tr>
-                    <th className="px-4 py-3">Keyword</th>
-                    <th className="px-4 py-3">Schedule</th>
-                    <th className="px-4 py-3">From</th>
-                    <th className="px-4 py-3">Until</th>
-                    <th className="px-4 py-3">Last run</th>
-                    <th className="px-4 py-3">Actions</th>
+                    <th>Keyword</th>
+                    <th>Schedule</th>
+                    <th>From</th>
+                    <th>Until</th>
+                    <th>Last run</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {tracks.map((track) => (
-                    <tr key={track.id} className="border-t border-[var(--border)]">
-                      <td className="px-4 py-3 font-medium">{track.keyword}</td>
-                      <td className="px-4 py-3 capitalize text-muted">{track.schedule}</td>
-                      <td className="px-4 py-3 text-muted">{formatDate(track.track_from)}</td>
-                      <td className="px-4 py-3 text-muted">
+                    <tr key={track.id}>
+                      <td className="font-medium">{track.keyword}</td>
+                      <td className="capitalize text-muted">{track.schedule}</td>
+                      <td className="text-muted">{formatDate(track.track_from)}</td>
+                      <td className="text-muted">
                         {track.track_until ? formatDate(track.track_until) : "Present"}
                       </td>
-                      <td className="px-4 py-3 text-muted">
+                      <td className="text-muted">
                         {track.last_tracked_at ? formatDate(track.last_tracked_at) : "Never"}
                       </td>
-                      <td className="px-4 py-3">
+                      <td>
                         <div className="flex flex-wrap gap-2">
                           <button type="button" disabled={isBusy} onClick={() => startEdit(track)} className="btn-secondary px-2 py-1 text-xs">
                             Edit
                           </button>
                           <button type="button" disabled={isBusy} onClick={() => void handleRun(track.id)} className="btn-secondary px-2 py-1 text-xs">
-                            Run (1 credit)
+                            Run
                           </button>
                           <button type="button" disabled={isBusy} onClick={() => void handleToggle(track)} className="btn-secondary px-2 py-1 text-xs">
                             {track.is_active ? "Pause" : "Resume"}
                           </button>
-                          <button type="button" disabled={isBusy} onClick={() => void handleDelete(track.id)} className="text-xs text-red-500">
+                          <button type="button" disabled={isBusy} onClick={() => void handleDelete(track.id)} className="btn-ghost px-2 py-1 text-xs text-[var(--danger)]">
                             Delete
                           </button>
                         </div>
@@ -312,14 +304,14 @@ export function ProjectControllerPanel({ project }: { project: Project }) {
           </section>
         </>
       ) : (
-        <section className="panel rounded-[2rem] p-6">
+        <section className="panel p-6">
           <h2 className="text-lg font-semibold">Tracking history</h2>
           <div className="mt-4 space-y-3">
             {runs.map((run) => (
-              <div key={run.id} className="panel-strong rounded-2xl p-4">
+              <div key={run.id} className="panel-strong p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-medium">{run.keyword}</p>
-                  <p className="font-mono text-xs text-muted">{formatDate(run.created_at)}</p>
+                  <p className="text-xs text-muted">{formatDate(run.created_at)}</p>
                 </div>
                 <p className="mt-2 text-sm text-muted">
                   {run.articles_found} results · {run.credits_used} credit(s)

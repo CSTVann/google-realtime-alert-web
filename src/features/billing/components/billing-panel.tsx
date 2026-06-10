@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/features/auth/auth-provider";
+import { PageHeader } from "@/features/ui/page-header";
 import { fetchTransactions, fetchWallet, type CreditTransaction, type Wallet } from "@/lib/api";
 
 function formatCredits(value: number) {
@@ -42,96 +43,83 @@ export function BillingPanel() {
 
   if (isLoading || !wallet) {
     return (
-      <div className="panel rounded-[2rem] p-8">
-        <div className="h-8 w-48 animate-pulse rounded-full bg-[var(--border)]" />
+      <div className="panel p-8">
+        <div className="skeleton h-8 w-48" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <section className="panel rounded-[2rem] p-8">
-        <p className="font-mono text-xs font-semibold uppercase tracking-[0.35em] text-muted">
-          Billing
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">Wallet & plan</h1>
-        <p className="mt-2 text-sm text-muted">
-          Payment provider integration (Stripe / Paddle) is prepared for the next phase. Stub
-          checkout on the pricing page adds credits instantly.
-        </p>
+    <div className="page-stack">
+      <section className="panel p-6 sm:p-8">
+        <PageHeader
+          label="Billing"
+          title="Wallet & plan"
+          description="View your credits, active plan, and payment history."
+        />
 
-        {error ? (
-          <p className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-            {error}
-          </p>
-        ) : null}
+        {error ? <p className="alert alert-error mt-6">{error}</p> : null}
 
-        <dl className="mt-8 grid gap-4 sm:grid-cols-2">
-          <div className="panel-strong rounded-2xl p-4">
-            <dt className="font-mono text-xs uppercase tracking-[0.2em] text-muted">Credits</dt>
-            <dd className="mt-2 text-3xl font-semibold">{formatCredits(wallet.credits_balance)}</dd>
+        <dl className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="stat-card">
+            <dt className="stat-label">Credits</dt>
+            <dd className="stat-value">{formatCredits(wallet.credits_balance)}</dd>
           </div>
-          <div className="panel-strong rounded-2xl p-4">
-            <dt className="font-mono text-xs uppercase tracking-[0.2em] text-muted">Active plan</dt>
-            <dd className="mt-2 text-xl font-semibold">
-              {wallet.active_plan_name ?? "Free trial"}
-            </dd>
+          <div className="stat-card">
+            <dt className="stat-label">Active plan</dt>
+            <dd className="mt-2 text-xl font-semibold">{wallet.active_plan_name ?? "Free trial"}</dd>
           </div>
-          <div className="panel-strong rounded-2xl p-4">
-            <dt className="font-mono text-xs uppercase tracking-[0.2em] text-muted">Projects</dt>
+          <div className="stat-card">
+            <dt className="stat-label">Projects</dt>
             <dd className="mt-2 text-xl font-semibold">
               {wallet.project_count}
               {wallet.max_projects !== null ? ` / ${wallet.max_projects}` : " / unlimited"}
             </dd>
           </div>
-          <div className="panel-strong rounded-2xl p-4">
-            <dt className="font-mono text-xs uppercase tracking-[0.2em] text-muted">Credits expire</dt>
+          <div className="stat-card">
+            <dt className="stat-label">Credits expire</dt>
             <dd className="mt-2 text-xl font-semibold">
               {wallet.credits_expires_at ? formatDate(wallet.credits_expires_at) : "—"}
             </dd>
           </div>
-          <div className="panel-strong rounded-2xl p-4 sm:col-span-2">
-            <dt className="font-mono text-xs uppercase tracking-[0.2em] text-muted">Track cost</dt>
+          <div className="stat-card sm:col-span-2">
+            <dt className="stat-label">Track cost</dt>
             <dd className="mt-2 text-xl font-semibold">1 credit / keyword / run</dd>
           </div>
         </dl>
 
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/pricing" className="btn-primary px-5 py-3 text-sm">
+          <Link href="/pricing" className="btn-primary px-4 py-2.5">
             Buy more credits
           </Link>
-          <Link href="/projects" className="btn-secondary px-5 py-3 text-sm">
+          <Link href="/projects" className="btn-secondary px-4 py-2.5">
             Manage projects
           </Link>
-          <button
-            type="button"
-            onClick={() => setShowHistory((value) => !value)}
-            className="btn-secondary px-5 py-3 text-sm"
-          >
-            {showHistory ? "Hide payment history" : "Payment history"}
+          <button type="button" onClick={() => setShowHistory((value) => !value)} className="btn-secondary px-4 py-2.5">
+            {showHistory ? "Hide history" : "Payment history"}
           </button>
         </div>
       </section>
 
       {showHistory ? (
-        <section className="panel rounded-[2rem] p-8">
-          <h2 className="text-xl font-semibold">Payment & credit history</h2>
-          <p className="mt-1 text-sm text-muted">
-            Signup bonuses, plan purchases, and credit usage from tracking runs.
-          </p>
+        <section className="panel p-6 sm:p-8">
+          <PageHeader
+            title="Payment & credit history"
+            description="Signup bonuses, plan purchases, and credit usage from tracking runs."
+          />
           <div className="mt-6 space-y-3">
             {transactions.map((tx) => (
-              <div key={tx.id} className="panel-strong flex flex-wrap items-center justify-between gap-3 rounded-2xl p-4">
+              <div key={tx.id} className="panel-strong flex flex-wrap items-center justify-between gap-3 p-4">
                 <div>
                   <p className="font-medium capitalize">{tx.reason.replace(/_/g, " ")}</p>
                   {tx.description ? <p className="mt-1 text-sm text-muted">{tx.description}</p> : null}
                 </div>
                 <div className="text-right">
-                  <p className={`font-semibold ${tx.amount >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                  <p className={`font-semibold ${tx.amount >= 0 ? "text-[var(--success)]" : "text-[var(--danger)]"}`}>
                     {tx.amount >= 0 ? "+" : ""}
                     {formatCredits(tx.amount)}
                   </p>
-                  <p className="mt-1 font-mono text-xs text-muted">{formatDate(tx.created_at)}</p>
+                  <p className="mt-1 text-xs text-muted">{formatDate(tx.created_at)}</p>
                 </div>
               </div>
             ))}

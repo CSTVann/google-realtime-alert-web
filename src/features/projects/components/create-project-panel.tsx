@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { PageHeader } from "@/features/ui/page-header";
 import { createProject } from "@/lib/api";
 
 export function CreateProjectPanel() {
@@ -35,20 +36,19 @@ export function CreateProjectPanel() {
   }
 
   return (
-    <section className="panel mx-auto max-w-2xl rounded-[2rem] p-8">
-      <p className="font-mono text-xs uppercase tracking-[0.35em] text-muted">New project</p>
-      <h1 className="mt-2 text-3xl font-semibold">Connect Telegram &amp; start tracking</h1>
-      <p className="mt-2 text-sm text-muted">
-        Add your project details and Telegram bot. We will send &quot;Successfully Connecting&quot;
-        to your group when linked.
-      </p>
+    <section className="panel mx-auto max-w-2xl p-6 sm:p-8">
+      <PageHeader
+        label="New project"
+        title="Connect Telegram"
+        description='We will send "Successfully Connecting" to your group when linked.'
+      />
 
-      <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
-        <label className="block space-y-2">
-          <span className="text-sm font-medium">Project name *</span>
+      <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
+        <label className="block space-y-1.5">
+          <span className="text-sm font-medium">Project name</span>
           <input required value={name} onChange={(e) => setName(e.target.value)} className="input-field" />
         </label>
-        <label className="block space-y-2">
+        <label className="block space-y-1.5">
           <span className="text-sm font-medium">Description</span>
           <textarea
             value={description}
@@ -56,8 +56,8 @@ export function CreateProjectPanel() {
             className="input-field min-h-24 resize-y"
           />
         </label>
-        <label className="block space-y-2">
-          <span className="text-sm font-medium">Telegram group ID *</span>
+        <label className="block space-y-1.5">
+          <span className="text-sm font-medium">Telegram group ID</span>
           <input
             required
             value={telegramChatId}
@@ -66,8 +66,8 @@ export function CreateProjectPanel() {
             className="input-field"
           />
         </label>
-        <label className="block space-y-2">
-          <span className="text-sm font-medium">Telegram bot token *</span>
+        <label className="block space-y-1.5">
+          <span className="text-sm font-medium">Telegram bot token</span>
           <input
             required
             value={telegramBotToken}
@@ -77,14 +77,10 @@ export function CreateProjectPanel() {
           />
         </label>
 
-        {error ? (
-          <p className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-            {error}
-          </p>
-        ) : null}
+        {error ? <p className="alert alert-error">{error}</p> : null}
 
-        <button type="submit" disabled={isSubmitting} className="btn-primary w-full px-5 py-3 text-sm disabled:opacity-60">
-          {isSubmitting ? "Creating..." : "Create project & connect Telegram"}
+        <button type="submit" disabled={isSubmitting} className="btn-primary w-full px-4 py-2.5">
+          {isSubmitting ? "Creating..." : "Create project"}
         </button>
       </form>
     </section>

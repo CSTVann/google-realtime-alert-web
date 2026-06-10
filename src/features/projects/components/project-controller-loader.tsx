@@ -25,16 +25,16 @@ export function ProjectControllerLoader({ projectId }: { projectId: string }) {
 
   if (error) {
     return (
-      <div className="panel rounded-[2rem] p-8">
-        <p className="text-sm text-red-400">{error}</p>
+      <div className="panel p-8">
+        <p className="alert alert-error">{error}</p>
       </div>
     );
   }
 
   if (!project) {
     return (
-      <div className="panel rounded-[2rem] p-8">
-        <div className="h-8 w-48 animate-pulse rounded-full bg-[var(--border)]" />
+      <div className="panel p-8">
+        <div className="skeleton h-8 w-48" />
       </div>
     );
   }
