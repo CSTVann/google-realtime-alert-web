@@ -3,13 +3,13 @@
 import Link from "next/link";
 
 import { useAuth } from "@/features/auth/auth-provider";
-import { isAdmin } from "@/lib/auth";
+import { ProfileMenu } from "@/features/auth/components/profile-menu";
 
 export function AuthNav() {
-  const { user, isLoading, logout } = useAuth();
+  const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div className="skeleton h-9 w-20" />;
+    return <div className="skeleton h-9 w-9 rounded-full" />;
   }
 
   if (!user) {
@@ -25,29 +25,5 @@ export function AuthNav() {
     );
   }
 
-  return (
-    <div className="flex items-center gap-2">
-      <span className="badge hidden lg:inline-flex">
-        {user.credits_balance.toLocaleString()} credits
-      </span>
-      <Link href="/account" className="btn-ghost hidden px-3 py-2 sm:inline-flex">
-        Account
-      </Link>
-      {isAdmin(user) ? (
-        <Link href="/admin/users" className="btn-ghost hidden px-3 py-2 sm:inline-flex">
-          Users
-        </Link>
-      ) : null}
-      <button
-        type="button"
-        onClick={() => {
-          logout();
-          window.location.href = "/login";
-        }}
-        className="btn-secondary px-3 py-2"
-      >
-        Log out
-      </button>
-    </div>
-  );
+  return <ProfileMenu />;
 }

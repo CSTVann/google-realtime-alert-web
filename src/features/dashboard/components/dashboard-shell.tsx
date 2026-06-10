@@ -6,13 +6,13 @@ import type { ReactNode } from "react";
 
 import { AuthNav } from "@/features/auth/components/auth-nav";
 import { AppLogo } from "@/features/ui/app-logo";
-import { ThemeToggle } from "@/features/theme/components/theme-toggle";
 
 const navigationItems = [
   { label: "Overview", href: "/" },
   { label: "Projects", href: "/projects" },
   { label: "Pricing", href: "/pricing" },
   { label: "Billing", href: "/billing" },
+  { label: "About", href: "/about" },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -48,10 +48,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             })}
           </nav>
 
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <AuthNav />
-          </div>
+          <AuthNav />
         </div>
       </header>
 
