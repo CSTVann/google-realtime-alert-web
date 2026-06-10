@@ -25,18 +25,32 @@ async function apiFetch(path: string, init: RequestInit = {}): Promise<Response>
 }
 
 async function parseError(response: Response): Promise<string> {
+  const fallbackByStatus: Record<number, string> = {
+    400: "Invalid request. Please check your input.",
+    401: "Please sign in again.",
+    402: "Not enough credits. Buy a plan to continue.",
+    403: "You do not have permission to do this.",
+    404: "The requested item was not found.",
+    503: "Service is temporarily unavailable. Try again shortly.",
+    500: "Something went wrong on our side. Please try again.",
+  };
+
   try {
-    const data = (await response.json()) as ApiError;
-    if (typeof data.detail === "string") {
+    const data = (await response.json()) as ApiError & { error?: string };
+    if (typeof data.detail === "string" && data.detail.trim()) {
       return data.detail;
     }
     if (Array.isArray(data.detail) && data.detail.length > 0) {
       return data.detail[0]?.msg ?? "Request failed";
     }
+    if (typeof data.error === "string" && data.error.trim() && data.error !== "internal_server_error") {
+      return data.error;
+    }
   } catch {
     // ignore JSON parse errors
   }
-  return "Request failed";
+
+  return fallbackByStatus[response.status] ?? "Request failed";
 }
 
 export async function registerUser(payload: {
@@ -192,6 +206,15 @@ export type CreditTransaction = {
   created_at: string;
 };
 
+export type BillingSetup = {
+  provider: string;
+  payments_live: boolean;
+  stripe_webhook_url: string;
+  paddle_webhook_url: string;
+  missing_env_vars: string[];
+  setup_notes: string[];
+};
+
 export type Project = {
   id: string;
   name: string;
@@ -241,6 +264,12 @@ export async function fetchWallet(): Promise<Wallet> {
   const response = await apiFetch("/billing/wallet");
   if (!response.ok) throw new Error(await parseError(response));
   return response.json() as Promise<Wallet>;
+}
+
+export async function fetchBillingSetup(): Promise<BillingSetup> {
+  const response = await apiFetch("/billing/setup");
+  if (!response.ok) throw new Error(await parseError(response));
+  return response.json() as Promise<BillingSetup>;
 }
 
 export async function fetchTransactions(): Promise<CreditTransaction[]> {

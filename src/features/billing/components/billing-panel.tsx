@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/features/auth/auth-provider";
 import { PageHeader } from "@/features/ui/page-header";
-import { fetchTransactions, fetchWallet, type CreditTransaction, type Wallet } from "@/lib/api";
+import { fetchBillingSetup, fetchTransactions, fetchWallet, type BillingSetup, type CreditTransaction, type Wallet } from "@/lib/api";
 
 function formatCredits(value: number) {
   return new Intl.NumberFormat("en-US").format(value);
@@ -24,6 +24,8 @@ export function BillingPanel() {
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [showSetup, setShowSetup] = useState(false);
+  const [setup, setSetup] = useState<BillingSetup | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -33,10 +35,11 @@ export function BillingPanel() {
       return;
     }
 
-    void Promise.all([fetchWallet(), fetchTransactions()])
-      .then(([walletData, txData]) => {
+    void Promise.all([fetchWallet(), fetchTransactions(), fetchBillingSetup()])
+      .then(([walletData, txData, setupData]) => {
         setWallet(walletData);
         setTransactions(txData);
+        setSetup(setupData);
       })
       .catch((err) => setError(err instanceof Error ? err.message : "Failed to load wallet"));
   }, [isLoading, user, router]);
@@ -98,8 +101,58 @@ export function BillingPanel() {
           <button type="button" onClick={() => setShowHistory((value) => !value)} className="btn-secondary px-4 py-2.5">
             {showHistory ? "Hide history" : "Payment history"}
           </button>
+          {setup && !setup.payments_live ? (
+            <button type="button" onClick={() => setShowSetup((value) => !value)} className="btn-secondary px-4 py-2.5">
+              {showSetup ? "Hide payment setup" : "Payment setup"}
+            </button>
+          ) : null}
         </div>
       </section>
+
+      {showSetup && setup ? (
+        <section className="panel p-6 sm:p-8">
+          <PageHeader
+            title="Payment provider setup"
+            description={`Provider: ${setup.provider}. Live payments are ${setup.payments_live ? "enabled" : "not enabled yet"}.`}
+          />
+          <div className="mt-6 space-y-4 text-sm">
+            {setup.stripe_webhook_url ? (
+              <div className="panel-strong p-4">
+                <p className="font-medium">Stripe webhook URL</p>
+                <p className="mt-1 break-all font-mono text-xs text-muted">{setup.stripe_webhook_url}</p>
+              </div>
+            ) : (
+              <p className="text-muted">Set PUBLIC_API_BASE_URL in API .env to see webhook URLs.</p>
+            )}
+            {setup.paddle_webhook_url ? (
+              <div className="panel-strong p-4">
+                <p className="font-medium">Paddle webhook URL</p>
+                <p className="mt-1 break-all font-mono text-xs text-muted">{setup.paddle_webhook_url}</p>
+              </div>
+            ) : null}
+            {setup.missing_env_vars.length > 0 ? (
+              <div>
+                <p className="font-medium">Missing environment variables</p>
+                <ul className="mt-2 list-inside list-disc text-muted">
+                  {setup.missing_env_vars.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {setup.setup_notes.length > 0 ? (
+              <div>
+                <p className="font-medium">How to configure</p>
+                <ul className="mt-2 space-y-2 text-muted">
+                  {setup.setup_notes.map((note) => (
+                    <li key={note}>{note}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       {showHistory ? (
         <section className="panel p-6 sm:p-8">

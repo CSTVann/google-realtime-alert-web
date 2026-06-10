@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { useAuth } from "@/features/auth/auth-provider";
 import { PageHeader } from "@/features/ui/page-header";
@@ -27,12 +28,26 @@ function formatPrice(value: number) {
 }
 
 export function PricingPanel() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, refreshUser } = useAuth();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [isLoadingPlans, setIsLoadingPlans] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkoutStatus = searchParams.get("checkout");
+    if (checkoutStatus === "success") {
+      setSuccess("Payment successful. Your credits and plan have been updated.");
+      void refreshUser();
+      router.replace("/pricing");
+    } else if (checkoutStatus === "canceled") {
+      setError("Payment was canceled. No charges were made.");
+      router.replace("/pricing");
+    }
+  }, [searchParams, refreshUser, router]);
 
   useEffect(() => {
     void fetchPlans()
@@ -55,10 +70,17 @@ export function PricingPanel() {
       const result = await checkoutPlan(planId);
       await refreshUser();
       setSuccess(
-        `${result.message} +${formatCredits(result.credits_added)} credits (balance: ${formatCredits(result.credits_balance)}).`,
+        `Plan activated successfully. +${formatCredits(result.credits_added)} credits (balance: ${formatCredits(result.credits_balance)}).`,
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Checkout failed");
+      const message = err instanceof Error ? err.message : "Checkout failed";
+      if (message.toLowerCase().includes("credit") || message.toLowerCase().includes("payment")) {
+        setError(message);
+      } else if (message.toLowerCase().includes("declined")) {
+        setError("Payment was declined. Try another card or contact your bank.");
+      } else {
+        setError(message);
+      }
     } finally {
       setLoadingPlan(null);
     }
@@ -125,7 +147,7 @@ export function PricingPanel() {
                   onClick={() => void handleCheckout(plan.id)}
                   className="btn-primary mt-8 w-full px-4 py-2.5"
                 >
-                  {loadingPlan === plan.id ? "Activating..." : user ? "Buy plan (stub)" : "Register to buy"}
+                  {loadingPlan === plan.id ? "Processing..." : user ? "Buy plan" : "Register to buy"}
                 </button>
               </article>
             ))

@@ -84,23 +84,6 @@ export function AboutPanel() {
           results on your schedule. No new app to install, no inbox clutter.
         </p>
       </section>
-
-      <section className="panel flex flex-wrap items-center justify-between gap-4 p-6 sm:p-8">
-        <div>
-          <h2 className="text-xl font-semibold">Ready to get started?</h2>
-          <p className="mt-2 text-sm text-muted">
-            Create a free account and try tracking with 100 credits — valid for 7 days.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <Link href="/register" className="btn-primary px-4 py-2.5">
-            Create account
-          </Link>
-          <Link href="/pricing" className="btn-secondary px-4 py-2.5">
-            View pricing
-          </Link>
-        </div>
-      </section>
     </div>
   );
 }
