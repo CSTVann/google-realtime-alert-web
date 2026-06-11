@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { AuthNav } from "@/features/auth/components/auth-nav";
 import { AppLogo } from "@/features/ui/app-logo";
@@ -56,17 +56,37 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 768px)");
+    const closeOnDesktop = () => {
+      if (media.matches) setMobileOpen(false);
+    };
+    media.addEventListener("change", closeOnDesktop);
+    return () => media.removeEventListener("change", closeOnDesktop);
+  }, []);
+
   return (
     <div className="relative min-h-screen text-[var(--foreground)]">
       <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]/90 backdrop-blur-md">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+          <AppLogo />
+
+          <nav className="hidden items-center gap-1 md:flex">
+            <NavLinks pathname={pathname} />
+          </nav>
+
           <div className="flex items-center gap-2">
+            <AuthNav />
             <button
               type="button"
-              aria-label="Open menu"
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileOpen}
               onClick={() => setMobileOpen((open) => !open)}
-              className="btn-secondary flex h-9 w-9 items-center justify-center p-0 md:hidden"
+              className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] transition hover:bg-[var(--surface-muted)] max-md:inline-flex"
             >
               <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
                 {mobileOpen ? (
@@ -84,18 +104,11 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                 )}
               </svg>
             </button>
-            <AppLogo />
           </div>
-
-          <nav className="hidden items-center gap-1 md:flex">
-            <NavLinks pathname={pathname} />
-          </nav>
-
-          <AuthNav />
         </div>
 
         {mobileOpen ? (
-          <nav className="border-t border-[var(--border)] px-4 py-3 md:hidden">
+          <nav className="border-t border-[var(--border)] px-4 py-3 max-md:block md:hidden">
             <div className="flex flex-col gap-1">
               <NavLinks pathname={pathname} onNavigate={() => setMobileOpen(false)} className="block" />
             </div>
