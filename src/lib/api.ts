@@ -239,13 +239,25 @@ export type TrackRun = {
   created_at: string;
 };
 
-export type TrackSchedule = "hourly" | "daily" | "weekly";
+export type TrackSchedule =
+  | "30s"
+  | "1m"
+  | "5m"
+  | "15m"
+  | "30m"
+  | "1h"
+  | "1h30m"
+  | "3h"
+  | "6h"
+  | "12h"
+  | "24h";
 
 export type Track = {
   id: string;
   project_id: string;
   keyword: string;
   schedule: TrackSchedule;
+  schedule_enabled: boolean;
   track_from: string;
   track_until: string | null;
   is_active: boolean;
@@ -353,6 +365,7 @@ export async function updateTrack(
   payload: Partial<{
     keyword: string;
     schedule: TrackSchedule;
+    schedule_enabled: boolean;
     track_from: string;
     track_until: string | null;
     is_active: boolean;
@@ -377,6 +390,7 @@ export async function createTrack(
   payload: {
     keyword: string;
     schedule: TrackSchedule;
+    schedule_enabled?: boolean;
     track_from: string;
     track_until?: string | null;
   },

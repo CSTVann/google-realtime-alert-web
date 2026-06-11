@@ -17,6 +17,10 @@ import {
   type TrackRun,
   type TrackSchedule,
 } from "@/lib/api";
+import {
+  scheduleLabel,
+} from "@/features/projects/lib/track-schedules";
+import { SchedulePicker } from "@/features/projects/components/schedule-picker";
 
 function toLocalInput(iso: string) {
   const date = new Date(iso);
@@ -43,7 +47,8 @@ export function ProjectControllerPanel({ project }: { project: Project }) {
   const [editingTrack, setEditingTrack] = useState<Track | null>(null);
 
   const [keyword, setKeyword] = useState("");
-  const [schedule, setSchedule] = useState<TrackSchedule>("daily");
+  const [schedule, setSchedule] = useState<TrackSchedule>("1h");
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [trackFrom, setTrackFrom] = useState(toLocalInput(new Date().toISOString()));
   const [trackUntil, setTrackUntil] = useState("");
 
@@ -76,11 +81,13 @@ export function ProjectControllerPanel({ project }: { project: Project }) {
       await createTrack(project.id, {
         keyword: keyword.trim(),
         schedule,
+        schedule_enabled: scheduleEnabled,
         track_from: new Date(trackFrom).toISOString(),
         track_until: trackUntil ? new Date(trackUntil).toISOString() : null,
       });
       setKeyword("");
-      setMessage("Keyword added.");
+      setScheduleEnabled(false);
+      setMessage(scheduleEnabled ? "Keyword added with automatic schedule." : "Keyword added.");
       await loadData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to add keyword");
@@ -117,6 +124,18 @@ export function ProjectControllerPanel({ project }: { project: Project }) {
     }
   }
 
+  async function handleToggleSchedule(track: Track) {
+    setIsBusy(true);
+    try {
+      await updateTrack(track.id, { schedule_enabled: !track.schedule_enabled });
+      await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Update failed");
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
   async function handleToggle(track: Track) {
     setIsBusy(true);
     try {
@@ -133,6 +152,7 @@ export function ProjectControllerPanel({ project }: { project: Project }) {
     setEditingTrack(track);
     setKeyword(track.keyword);
     setSchedule(track.schedule);
+    setScheduleEnabled(track.schedule_enabled);
     setTrackFrom(toLocalInput(track.track_from));
     setTrackUntil(track.track_until ? toLocalInput(track.track_until) : "");
     setError(null);
@@ -142,7 +162,8 @@ export function ProjectControllerPanel({ project }: { project: Project }) {
   function cancelEdit() {
     setEditingTrack(null);
     setKeyword("");
-    setSchedule("daily");
+    setSchedule("1h");
+    setScheduleEnabled(false);
     setTrackFrom(toLocalInput(new Date().toISOString()));
     setTrackUntil("");
   }
@@ -157,6 +178,7 @@ export function ProjectControllerPanel({ project }: { project: Project }) {
       await updateTrack(editingTrack.id, {
         keyword: keyword.trim(),
         schedule,
+        schedule_enabled: scheduleEnabled,
         track_from: new Date(trackFrom).toISOString(),
         track_until: trackUntil ? new Date(trackUntil).toISOString() : null,
       });
@@ -212,7 +234,7 @@ export function ProjectControllerPanel({ project }: { project: Project }) {
           <section className="panel p-6">
             <h2 className="text-lg font-semibold">{editingTrack ? "Edit keyword" : "Add keyword"}</h2>
             <p className="mt-1 text-sm text-muted">
-              Set a date window per keyword — from a start date until present or a specific end date.
+              Pick manual or automatic tracking, then set your keyword and date window.
             </p>
             <form
               className="mt-4 grid gap-4 md:grid-cols-2"
@@ -222,19 +244,19 @@ export function ProjectControllerPanel({ project }: { project: Project }) {
                 <span className="text-sm font-medium">Keyword</span>
                 <input required value={keyword} onChange={(e) => setKeyword(e.target.value)} className="input-field" />
               </label>
-              <label className="block space-y-1.5">
-                <span className="text-sm font-medium">Schedule</span>
-                <select value={schedule} onChange={(e) => setSchedule(e.target.value as TrackSchedule)} className="input-field">
-                  <option value="hourly">Hourly</option>
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                </select>
-              </label>
+
+              <SchedulePicker
+                schedule={schedule}
+                scheduleEnabled={scheduleEnabled}
+                onScheduleChange={setSchedule}
+                onScheduleEnabledChange={setScheduleEnabled}
+              />
+
               <label className="block space-y-1.5">
                 <span className="text-sm font-medium">Track from</span>
                 <input type="datetime-local" required value={trackFrom} onChange={(e) => setTrackFrom(e.target.value)} className="input-field" />
               </label>
-              <label className="block space-y-1.5 md:col-span-2">
+              <label className="block space-y-1.5">
                 <span className="text-sm font-medium">Track until (optional)</span>
                 <input type="datetime-local" value={trackUntil} onChange={(e) => setTrackUntil(e.target.value)} className="input-field" />
               </label>
@@ -259,6 +281,7 @@ export function ProjectControllerPanel({ project }: { project: Project }) {
                   <tr>
                     <th>Keyword</th>
                     <th>Schedule</th>
+                    <th>Mode</th>
                     <th>From</th>
                     <th>Until</th>
                     <th>Last run</th>
@@ -269,7 +292,12 @@ export function ProjectControllerPanel({ project }: { project: Project }) {
                   {tracks.map((track) => (
                     <tr key={track.id}>
                       <td className="font-medium">{track.keyword}</td>
-                      <td className="capitalize text-muted">{track.schedule}</td>
+                      <td className="text-muted">{scheduleLabel(track.schedule)}</td>
+                      <td>
+                        <span className={`badge ${track.schedule_enabled ? "badge-success" : ""}`}>
+                          {track.schedule_enabled ? "Auto" : "Manual"}
+                        </span>
+                      </td>
                       <td className="text-muted">{formatDate(track.track_from)}</td>
                       <td className="text-muted">
                         {track.track_until ? formatDate(track.track_until) : "Present"}
@@ -281,6 +309,14 @@ export function ProjectControllerPanel({ project }: { project: Project }) {
                         <div className="flex flex-wrap gap-2">
                           <button type="button" disabled={isBusy} onClick={() => startEdit(track)} className="btn-secondary px-2 py-1 text-xs">
                             Edit
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isBusy}
+                            onClick={() => void handleToggleSchedule(track)}
+                            className={`px-2 py-1 text-xs ${track.schedule_enabled ? "btn-primary" : "btn-secondary"}`}
+                          >
+                            Schedule
                           </button>
                           <button type="button" disabled={isBusy} onClick={() => void handleRun(track.id)} className="btn-secondary px-2 py-1 text-xs">
                             Run
